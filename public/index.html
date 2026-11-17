@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FPL Gameweek Assistant</title>
+  <meta name="description" content="Transfer, line-up, captain and bench advice for Fantasy Premier League with best/base/worst case points projections." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%2337003c'/><path d='M9 21l5-10 4 7 3-4 3 7' stroke='%2300ff87' stroke-width='2.5' fill='none' stroke-linejoin='round'/></svg>" />
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">⚽</span>
+        <div>
+          <h1>FPL Gameweek Assistant</h1>
+          <p class="sub">Transfers · starting XI · captain · bench order · points projection</p>
+        </div>
+      </div>
+      <div class="gw-pill" id="gwPill">Loading live FPL data…</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card" id="squadCard">
+      <div class="card-head">
+        <h2><span class="step">1</span> Your squad</h2>
+        <span class="muted" id="squadCount">0 / 15</span>
+      </div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="id" role="tab">FPL team ID</button>
+        <button class="tab" data-tab="image" role="tab">Upload screenshot</button>
+        <button class="tab" data-tab="manual" role="tab">Pick players</button>
+      </div>
+
+      <div class="tab-panel" data-panel="id">
+        <p class="muted small">Find it in the FPL website URL on your Points page: <code>fantasy.premierleague.com/entry/<b>1234567</b>/event/…</code>. Imports your squad, bank, free transfers, selling prices and remaining chips.</p>
+        <form class="row" id="idForm">
+          <input id="entryId" inputmode="numeric" placeholder="e.g. 1234567" aria-label="FPL team ID" />
+          <button class="btn" type="submit">Import team</button>
+        </form>
+      </div>
+
+      <div class="tab-panel hidden" data-panel="image">
+        <p class="muted small">Upload a screenshot of your Pick Team or Points page. Names are read on your device (OCR) and matched to Premier League players — check the result below and fix any misses.</p>
+        <label class="drop" id="drop">
+          <input type="file" id="imageInput" accept="image/*" hidden />
+          <span id="dropText">Drop an image here or <u>browse</u></span>
+          <img id="preview" alt="" class="hidden" />
+        </label>
+        <div class="progress hidden" id="ocrProgress"><div></div></div>
+      </div>
+
+      <div class="tab-panel hidden" data-panel="manual">
+        <p class="muted small">Click an empty slot below and type a player's name. You need 2 GKP, 5 DEF, 5 MID, 3 FWD (max 3 per club).</p>
+      </div>
+
+      <div id="notice" class="notice hidden"></div>
+
+      <div class="squad-editor" id="squadEditor"></div>
+
+      <div class="settings">
+        <label>Bank (£m)<input type="number" id="bank" step="0.1" min="0" value="0.0" /></label>
+        <label>Free transfers<select id="ft"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        <label>Plan over<select id="horizon"><option value="1">1 GW</option><option value="2">2 GWs</option><option value="3" selected>3 GWs</option><option value="4">4 GWs</option><option value="5">5 GWs</option><option value="6">6 GWs</option></select></label>
+        <button class="btn ghost" id="clearBtn" type="button">Clear squad</button>
+        <button class="btn primary" id="analyseBtn" type="button" disabled>Analyse my team</button>
+      </div>
+    </section>
+
+    <section id="results" class="hidden">
+      <div class="card">
+        <div class="card-head">
+          <h2><span class="step">2</span> Projected points <span class="muted" id="projGw"></span></h2>
+          <span class="muted small" id="projNote"></span>
+        </div>
+        <div class="scenarios" id="scenarios"></div>
+        <div id="histogram" class="histogram"></div>
+        <p class="muted small" id="scenarioExplain"></p>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2><span class="step">3</span> Transfers</h2><span class="muted small" id="tfMeta"></span></div>
+        <div id="options" class="options"></div>
+        <details class="more">
+          <summary>Other strong moves</summary>
+          <div id="alternatives"></div>
+        </details>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><h2><span class="step">4</span> Starting XI &amp; bench</h2><span class="muted small" id="formation"></span></div>
+          <div class="pitch" id="pitch"></div>
+          <div class="bench" id="bench"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2><span class="step">5</span> Tips</h2></div>
+          <ul class="tips" id="tips"></ul>
+          <div id="chips"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Player projections</h2><span class="muted small">Recommended squad · next GW</span></div>
+        <div class="table-wrap"><table class="ptable" id="ptable"></table></div>
+      </div>
+
+      <details class="card method">
+        <summary><h2>How the projections work</h2></summary>
+        <ul>
+          <li><b>Data:</b> official Fantasy Premier League API — every finished gameweek's per-player stats (minutes, starts, xG, xA, goals, assists, bonus, saves, defensive contributions, cards), fixtures, injury flags and prices. Refreshed every 10 minutes.</li>
+          <li><b>Team strength:</b> attack and defence ratings from each finished fixture (65% xG, 35% actual goals), weighting recent games more, adjusted for home advantage.</li>
+          <li><b>Players:</b> start and 60-minute probabilities from the last six team fixtures; per-90 goal, assist, bonus, save and defensive-contribution rates (recency weighted, shrunk towards positional averages for small samples); scaled by the opponent and venue, and by the official chance-of-playing flag.</li>
+          <li><b>Scenarios:</b> 10,000 simulated gameweeks of your squad — shared clean sheets between team-mates, FPL auto-sub rules, captain/vice — giving the <b>worst case</b> (10th percentile), <b>base case</b> (average) and <b>best case</b> (90th percentile). Transfer hits are deducted.</li>
+          <li><b>Transfers:</b> every single, double and (extended) triple move is scored on weighted expected points over your planning horizon, respecting budget, selling prices and the 3-per-club rule. Rolling a transfer is valued at ~1.5 points.</li>
+        </ul>
+        <p class="muted small">Projections are estimates, not guarantees — always check late team news before the deadline.</p>
+      </details>
+    </section>
+  </main>
+
+  <div class="loading hidden" id="loading"><div class="spinner"></div><p id="loadingText">Crunching numbers…</p></div>
+
+  <footer class="wrap muted small foot">Not affiliated with the Premier League or Fantasy Premier League. Data © its owners, fetched live from the public FPL API.</footer>
+  <script src="app.js"></script>
+</body>
+</html>
