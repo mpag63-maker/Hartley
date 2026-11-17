@@ -40,7 +40,7 @@ body {
 .small { font-size: 13px; }
 code { background: var(--info-bg); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; word-break: break-all; }
 
-.top { background: linear-gradient(120deg, var(--brand), var(--brand-2)); color: #fff; padding: 18px 0; }
+.top { background: linear-gradient(120deg, var(--brand), var(--brand-2)); color: #fff; padding: 18px 0; padding-top: max(18px, env(safe-area-inset-top)); }
 .top-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .brand { display: flex; gap: 12px; align-items: center; }
 .logo { font-size: 30px; }

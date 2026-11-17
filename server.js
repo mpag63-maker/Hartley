@@ -14,7 +14,7 @@ const VENDOR = {
   '/vendor/tesseract-core/': path.join(__dirname, 'node_modules/tesseract.js-core'),
   '/vendor/lang/': path.join(__dirname, 'node_modules/@tesseract.js-data/eng/4.0.0_best_int'),
 };
-const TYPES = { '.wasm': 'application/wasm', '.gz': 'application/gzip', '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json' };
+const TYPES = { '.wasm': 'application/wasm', '.gz': 'application/gzip', '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json' };
 
 function send(res, status, body, type = 'application/json') {
   res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' });
