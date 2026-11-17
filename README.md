@@ -8,6 +8,8 @@ A web app for Fantasy Premier League managers. Load your squad and get advice fo
 - **Points projection:** worst case, base case and best case for the gameweek.
 - **Tips:** injury flags, blank and double gameweeks, rotation risk, and chip suggestions.
 
+![Screenshot](docs/screenshot.png)
+
 All numbers come from **live data in the official FPL API**: every finished gameweek's stats, the fixture list, injury news and prices.
 
 ## Three ways to enter your team
